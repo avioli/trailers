@@ -158,13 +158,15 @@ echo "$LOCATIONS" | while read HREF; do
                   test "$CONTENTLENGTH" -gt 0 && echo "$CONTENTLENGTH" > "$CONTENTLENGTH_FILE"
                 fi
 
+                STATUS=
                 if test -n "$RANGE"; then
                   echo >&2 "$TRAILER_BASENAME: resuming download at "$FILESIZE" byte"
-                  __curl -L -# -H "$REF" -H "$RANGE" "$URL" >> "$TRAILER_FILE.part" || echo "$TRAILER_BASENAME: error downloading the trailer"
+                  __curl -L -# -H "$REF" -H "$RANGE" "$URL" >> "$TRAILER_FILE.part" && STATUS=$? || { STATUS=$?; echo "$TRAILER_BASENAME: error downloading the trailer"; }
                 else
-                  __curl -L -# -H "$REF" "$URL" > "$TRAILER_FILE.part" || echo "$TRAILER_BASENAME: error downloading the trailer"
+                  __curl -L -# -H "$REF" "$URL" > "$TRAILER_FILE.part" && STATUS=$? || { STATUS=$?; echo "$TRAILER_BASENAME: error downloading the trailer"; }
                 fi
-                test "$?" -eq 0 && mv "$TRAILER_FILE.part" "$TRAILER_FILE"
+                test "$STATUS" -eq 0 && mv "$TRAILER_FILE.part" "$TRAILER_FILE"
+                # TODO: queue the files to resume/retry
                 rm "$TMP_MARKERFILE"
               fi
             done
