@@ -64,7 +64,7 @@ HTTP_RESPONSE=$(__fetchFeed "http://trailers.apple.com/trailers/home/feeds/just_
 LOCATIONS=$(echo "$HTTP_RESPONSE" | __processJSONFeed)
 
 echo "$LOCATIONS" | while read HREF; do
-  test -e "$TMP_MARKERFILE" && echo "\n\n** Interrupted" && exit 2
+  test -e "$TMP_MARKERFILE" && echo -e "\n\n** Interrupted" && exit 2
 
   TRAILER_BASENAME=$(basename "$HREF")
   #test "$TRAILER_BASENAME" != "theinvitation" && continue
@@ -133,6 +133,8 @@ echo "$LOCATIONS" | while read HREF; do
             fi
 
             echo "$TRAILER_URL" | while read URL; do
+              test -e "$TMP_MARKERFILE" && echo -e "\n\n** Interrupted" && exit 2
+
               RANGE=
               TRAILER_FILE_BASENAME=$(basename "$URL")
               TRAILER_FILE="$TRAILER_OUTDIR$TRAILER_FILE_BASENAME"
