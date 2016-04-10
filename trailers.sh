@@ -168,6 +168,9 @@ echo "$LOCATIONS" | while read HREF; do
                   __curl -L -# -H "$REF" "$URL" > "$TRAILER_FILE.part" && STATUS=$? || { STATUS=$?; echo "$TRAILER_BASENAME: error downloading the trailer"; }
                 fi
                 test "$STATUS" -eq 0 && mv "$TRAILER_FILE.part" "$TRAILER_FILE"
+                #test "$STATUS" -ne 0 && echo "CURL EXIT STATUS: $STATUS"
+                # 18 = CURLE_PARTIAL_FILE - A file transfer was shorter or larger than expected. This happens when the server first reports an expected transfer size, and then delivers data that doesn't match the previously given size.
+                # @see: https://curl.haxx.se/libcurl/c/libcurl-errors.html
                 # TODO: queue the files to resume/retry
                 rm "$TMP_MARKERFILE"
               fi
