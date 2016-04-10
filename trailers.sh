@@ -60,6 +60,13 @@ function __processJSONFeed () {
 # NOTE: keep in mind that the XML feed is with smaller number of items
 #HTTP_RESPONSE=$(__fetchFeed "http://images.apple.com/trailers/home/rss/newtrailers.rss")
 #LOCATIONS=$(echo "$HTTP_RESPONSE" | __processXMLFeed)
+# 'http://trailers.apple.com/trailers/home/feeds/just_added.json'
+# 'http://trailers.apple.com/trailers/home/feeds/exclusive.json'
+# 'http://trailers.apple.com/trailers/home/feeds/just_hd.json'
+# 'http://trailers.apple.com/trailers/home/feeds/most_pop.json'
+# 'http://trailers.apple.com/trailers/home/feeds/genres.json'
+# 'http://trailers.apple.com/trailers/home/feeds/studios.json'
+# 'http://www.apple.com/trailers/home/scripts/quickfind.php?callback=searchCallback&q='"$QUERY"
 HTTP_RESPONSE=$(__fetchFeed "http://trailers.apple.com/trailers/home/feeds/just_added.json")
 LOCATIONS=$(echo "$HTTP_RESPONSE" | __processJSONFeed)
 
