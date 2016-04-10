@@ -64,7 +64,7 @@ HTTP_RESPONSE=$(__fetchFeed "http://trailers.apple.com/trailers/home/feeds/just_
 LOCATIONS=$(echo "$HTTP_RESPONSE" | __processJSONFeed)
 
 echo "$LOCATIONS" | while read HREF; do
-  test -e "$TMP_MARKERFILE" && { echo -e "\n\n** Interrupted"; exit 2; }
+  test -e "$TMP_MARKERFILE" && echo "\n\n** Interrupted" && exit 2
 
   TRAILER_BASENAME=$(basename "$HREF")
   #test "$TRAILER_BASENAME" != "theinvitation" && continue
@@ -117,6 +117,8 @@ echo "$LOCATIONS" | while read HREF; do
 #EOF
 #)
       if test -n "$JSON_RESPONSE"; then
+        # strip new line chars, since jq has issues with those. a better solution would be to escape them.
+        JSON_RESPONSE=$(echo "$JSON_RESPONSE" | tr -d "\r\n")
         MOVIE_TITLE=$(echo "$JSON_RESPONSE" | jq -r '.page.movie_title' | grep -ve '^null$' | tr ':' '_')
         if test -n "$MOVIE_TITLE"; then
           TRAILER_URL=$(echo "$JSON_RESPONSE" | jq -r '.clips[].versions.enus.sizes.hd720.srcAlt' | grep -ve '^null$')
