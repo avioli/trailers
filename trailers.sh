@@ -133,13 +133,38 @@ echo "$LOCATIONS" | while read HREF; do
             fi
 
             echo "$TRAILER_URL" | while read URL; do
+              RANGE=
               TRAILER_FILE_BASENAME=$(basename "$URL")
               TRAILER_FILE="$TRAILER_OUTDIR$TRAILER_FILE_BASENAME"
-              if test ! -e "$TRAILER_FILE"; then
+              # TODO: use xattr, if available
+              CONTENTLENGTH_FILE="$DATADIR$TRAILER_FILE_BASENAME.contentlength.txt"
+              CONTENTLENGTH=$(cat "$CONTENTLENGTH_FILE" 2>/dev/null)
+
+              if test -e "$TRAILER_FILE.part"; then
+                FILESIZE=$(stat -f "%z" "$TRAILER_FILE.part" 2>/dev/null)
+                test "$CONTENTLENGTH" -gt "$FILESIZE" && RANGE="Range: bytes=${FILESIZE}-"
+              fi
+
+              if test ! -e "$TRAILER_FILE" -o -n "$RANGE"; then
                 echo >&2 "$TRAILER_BASENAME: downloading trailer for $MOVIE_TITLE - $TRAILER_FILE_BASENAME"
                 #echo "$URL"
                 touch "$TMP_MARKERFILE"
-                __curl -L -# -H "$REF" "$URL" > "$TRAILER_FILE" || echo "$TRAILER_BASENAME: error downloading the trailer"
+
+                if test -z "$CONTENTLENGTH"; then
+                  #Content-Length: 72828515
+                  #Content-Type: video/m4v
+                  #Cache-Control: max-age=900
+                  CONTENTLENGTH=$(__curl -I -L -# -H "$REF" "$URL" | grep -ie '^Content-Length: ' | sed 's/.*: *\([0-9]*\).*/\1/')
+                  test "$CONTENTLENGTH" -gt 0 && echo "$CONTENTLENGTH" > "$CONTENTLENGTH_FILE"
+                fi
+
+                if test -n "$RANGE"; then
+                  echo >&2 "$TRAILER_BASENAME: resuming download at "$FILESIZE" byte"
+                  __curl -L -# -H "$REF" -H "$RANGE" "$URL" >> "$TRAILER_FILE.part" || echo "$TRAILER_BASENAME: error downloading the trailer"
+                else
+                  __curl -L -# -H "$REF" "$URL" > "$TRAILER_FILE.part" || echo "$TRAILER_BASENAME: error downloading the trailer"
+                fi
+                test "$?" -eq 0 && mv "$TRAILER_FILE.part" "$TRAILER_FILE"
                 rm "$TMP_MARKERFILE"
               fi
             done
